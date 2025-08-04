@@ -11,7 +11,7 @@ except Exception as e:
     st.stop()
 
 # === Anthropic API Setup ===
-API_KEY = "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"  # Replace with your actual key
+API_KEY = "ANTHROPIC_API_KEY"  # Replace with your actual key
 client = anthropic.Anthropic(api_key=API_KEY)
 
 # === Build prompt context ===
