@@ -1,6 +1,6 @@
 import anthropic
 
-client = anthropic.Anthropic(api_key="API-KEY")
+client = anthropic.Anthropic(api_key="ANTHROPIC_API_KEY")
 
 print("Claude Chatbot (type 'exit' to quit)")
 history = []
@@ -13,7 +13,7 @@ while True:
     history.append({"role": "user", "content": user_input})
 
     response = client.messages.create(
-        model="claude-3-sonnet-20240229",
+        model="claude-3-haiku-20240307",
         max_tokens=500,
         messages=history
     )
