@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-📊 AI-Powered Market Impact Reporter
-Automated News Event Analysis with Professional Reports
-
-This script fetches market data, analyzes impact, and generates comprehensive
+fetches market data, analyzes impact, and generates comprehensive
 market intelligence reports in professional format.
 """
 
@@ -19,7 +16,7 @@ from typing import Dict, List, Optional, Tuple
 import json
 warnings.filterwarnings('ignore')
 
-# Configuration for different event types and their typical market impacts
+# config for diff event types and typical market impacts
 EVENT_CONFIGS = {
     'jobs_report': {
         'name': 'U.S. Jobs Report',
@@ -53,7 +50,7 @@ EVENT_CONFIGS = {
 
 class MarketImpactReporter:
     def __init__(self, event_type: str = 'jobs_report', custom_config: Optional[Dict] = None):
-        """Initialize the reporter with event configuration"""
+        """initialize reporter with event configuration"""
         if custom_config:
             self.config = custom_config
         else:
@@ -63,31 +60,31 @@ class MarketImpactReporter:
         self.market_data = {}
         
     def get_recent_trading_day(self, days_back: int = 1) -> str:
-        """Get a recent trading day (avoiding weekends)"""
+        """get recent trading day (avoiding weekends)"""
         today = datetime.now()
         
         while days_back <= 10:
             test_date = today - timedelta(days=days_back)
             
-            # Skip weekends
+            # skip weekends
             if test_date.weekday() < 5:  # Monday = 0, Friday = 4
                 return test_date.strftime("%Y-%m-%d")
             
             days_back += 1
         
-        # Fallback
+        # fallback
         return (today - timedelta(days=3)).strftime("%Y-%m-%d")
 
     def fix_column_names(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Fix column naming issues from Yahoo Finance"""
+        """fix column naming issues from Yahoo Finance"""
         if data.empty:
             return data
         
-        # Handle MultiIndex columns
+        # MultiIndex columns
         if isinstance(data.columns, pd.MultiIndex):
             data.columns = [col[0] if isinstance(col, tuple) else col for col in data.columns]
         
-        # Create a mapping for common column name variations
+        # create mapping for common column name variations
         column_mapping = {}
         for col in data.columns:
             col_lower = str(col).lower().replace(' ', '').replace('_', '')
@@ -108,14 +105,13 @@ class MarketImpactReporter:
         if column_mapping:
             data = data.rename(columns=column_mapping)
         
-        # If we don't have 'Adj Close' but have 'Close', use Close as Adj Close
         if 'Adj Close' not in data.columns and 'Close' in data.columns:
             data['Adj Close'] = data['Close']
         
         return data
 
     def fetch_market_data(self, ticker: str, event_date: str) -> Tuple[pd.DataFrame, Optional[str]]:
-        """Fetch market data for analysis"""
+        """fetch market data for analysis"""
         try:
             dt = datetime.strptime(event_date, "%Y-%m-%d")
             days_ago = (datetime.now().date() - dt.date()).days
@@ -133,7 +129,7 @@ class MarketImpactReporter:
                 start = dt - timedelta(days=5)
                 end = dt + timedelta(days=5)
             
-            # Try to fetch data
+            # fetch data
             data = yf.download(ticker, 
                               start=start.strftime("%Y-%m-%d"), 
                               end=end.strftime("%Y-%m-%d"), 
@@ -149,7 +145,7 @@ class MarketImpactReporter:
             if 'Adj Close' not in data.columns:
                 return pd.DataFrame(), None
             
-            # Handle timezone for intraday data
+            # timezone conversion for intraday data
             if interval in ["1m", "5m"]:
                 if hasattr(data.index, 'tz') and data.index.tz is not None:
                     try:
@@ -162,7 +158,7 @@ class MarketImpactReporter:
                 except:
                     pass
             
-            # Calculate returns and volume changes
+            # calculate returns and volume changes
             if len(data) > 1:
                 data['Returns'] = data['Adj Close'].pct_change()
                 if 'Volume' in data.columns:
@@ -174,12 +170,12 @@ class MarketImpactReporter:
             return data, interval
             
         except Exception as e:
-            print(f"❌ Error fetching data for {ticker}: {e}")
+            print(f"Error fetching data for {ticker}: {e}")
             return pd.DataFrame(), None
 
     def analyze_ticker_impact(self, ticker: str, market_data: pd.DataFrame, 
                             event_datetime: datetime, data_interval: str) -> Optional[Dict]:
-        """Analyze impact for a single ticker"""
+        """analyze impact for a single ticker"""
         try:
             if data_interval == "1d":
                 return self.analyze_daily_impact(market_data, event_datetime.strftime("%Y-%m-%d"))
@@ -191,12 +187,12 @@ class MarketImpactReporter:
                 return self.analyze_intraday_impact(event_day_data, event_datetime, 60, 60, data_interval)
         
         except Exception as e:
-            print(f"❌ Error analyzing {ticker}: {e}")
+            print(f"Error analyzing {ticker}: {e}")
             return None
 
     def analyze_intraday_impact(self, event_day_data: pd.DataFrame, event_datetime: datetime, 
                               pre_window: int, post_window: int, data_interval: str) -> Optional[Dict]:
-        """Perform intraday impact analysis"""
+        """perform intraday impact analysis"""
         if data_interval == "5m":
             pre_window = max(30, (pre_window // 5) * 5)
             post_window = max(30, (post_window // 5) * 5)
@@ -229,7 +225,7 @@ class MarketImpactReporter:
             else:
                 volume_spike = 1
             
-            # Statistical significance
+            # statistical significance
             pre_returns = pre_data['Returns'].dropna()
             post_returns = post_data['Returns'].dropna()
             
@@ -261,7 +257,7 @@ class MarketImpactReporter:
             return None
 
     def analyze_daily_impact(self, market_data: pd.DataFrame, event_date: str) -> Optional[Dict]:
-        """Perform daily impact analysis"""
+        """daily impact analysis"""
         try:
             dt = datetime.strptime(event_date, "%Y-%m-%d")
             event_day_data = market_data[market_data.index.date == dt.date()]
@@ -295,7 +291,7 @@ class MarketImpactReporter:
             return None
 
     def generate_market_narrative(self, ticker: str, results: Dict) -> str:
-        """Generate narrative explanation for market moves"""
+        """generate narrative explanation for market moves"""
         narratives = []
         
         if 'price_change_pct' in results:
@@ -321,34 +317,34 @@ class MarketImpactReporter:
         return "; ".join(narratives) if narratives else f"{ticker} showed limited reaction"
 
     def generate_professional_report(self, event_date: str, event_description: str = None) -> str:
-        """Generate a professional market impact report"""
+        """generate professional market impact report"""
         
         report_lines = []
-        report_lines.append("**⭐️ Market Impact Analysis Report**")
+        report_lines.append("**Market Impact Analysis Report**")
         report_lines.append("=" * 60)
         report_lines.append("")
         
-        # Header
+        # header
         event_name = event_description or f"{self.config['name']} - {event_date}"
-        report_lines.append(f"**📊 Event: {event_name}**")
+        report_lines.append(f"**Event: {event_name}**")
         report_lines.append("")
         
-        # Executive Summary
+        # executive summary
         report_lines.append("**1. Executive Summary**")
         report_lines.append("")
         
         if not self.results:
-            report_lines.append("❌ No market data available for analysis.")
+            report_lines.append("No market data available for analysis.")
             return "\n".join(report_lines)
         
-        # Generate summary based on strongest reactions
+        # generate summary based on strongest reactions
         summary_items = []
         strongest_movers = []
         
         for ticker, result in self.results.items():
             if result and 'price_change_pct' in result:
                 change_pct = result['price_change_pct']
-                if abs(change_pct) > 0.3:  # Only include significant moves
+                if abs(change_pct) > 0.3:  # only include significant moves
                     strongest_movers.append((ticker, change_pct))
         
         strongest_movers.sort(key=lambda x: abs(x[1]), reverse=True)
@@ -358,7 +354,7 @@ class MarketImpactReporter:
             direction = "positive" if top_mover[1] > 0 else "negative"
             summary_items.append(f"Primary market reaction was {direction}, with {top_mover[0]} showing the strongest response ({top_mover[1]:+.1f}%)")
         
-        # Add volume and volatility insights
+        # add volume and volatility insights
         high_volume_tickers = [ticker for ticker, result in self.results.items() 
                               if result and (result.get('volume_spike', 1) > 1.5 or result.get('volume_ratio', 1) > 1.5)]
         
@@ -368,7 +364,7 @@ class MarketImpactReporter:
         report_lines.extend(summary_items)
         report_lines.append("")
         
-        # Market Reaction Details
+        # market reaction details
         report_lines.append("**2. Market Reaction Details**")
         report_lines.append("")
         
@@ -379,14 +375,14 @@ class MarketImpactReporter:
         
         report_lines.append("")
         
-        # Analysis and Interpretation
+        # analysis and interpretation
         report_lines.append("**3. Why This Happened**")
         report_lines.append("")
         
-        # Generate explanations based on patterns
+        # generate explanations based on patterns
         explanations = []
         
-        # Check for broad market moves
+        # check for broad market moves
         spy_result = self.results.get('SPY')
         if spy_result and abs(spy_result.get('price_change_pct', 0)) > 0.5:
             change = spy_result['price_change_pct']
@@ -395,7 +391,7 @@ class MarketImpactReporter:
             else:
                 explanations.append("1. **Risk-off sentiment prevailed** as the data raised concerns about economic headwinds or policy tightening.")
         
-        # Check for yield sensitivity
+        # check for yield sensitivity
         tlt_result = self.results.get('TLT')
         qqq_result = self.results.get('QQQ')
         if tlt_result and qqq_result:
@@ -403,12 +399,12 @@ class MarketImpactReporter:
             qqq_change = qqq_result.get('price_change_pct', 0)
             
             if tlt_change * qqq_change < 0 and abs(tlt_change) > 0.3:  # Opposite moves
-                if tlt_change < 0:  # Bonds down = yields up
+                if tlt_change < 0:  # bonds down = yields up
                     explanations.append("2. **Interest rate expectations shifted higher**, pressuring bond prices and benefiting rate-sensitive sectors while challenging growth stocks.")
-                else:  # Bonds up = yields down
+                else:  # bonds up = yields down
                     explanations.append("2. **Interest rate expectations shifted lower**, supporting bond prices and growth assets as discount rates declined.")
         
-        # Check for financial sector reaction
+        # check for financial sector reaction
         xlf_result = self.results.get('XLF')
         if xlf_result and abs(xlf_result.get('price_change_pct', 0)) > 0.5:
             change = xlf_result['price_change_pct']
@@ -423,13 +419,13 @@ class MarketImpactReporter:
         report_lines.extend(explanations)
         report_lines.append("")
         
-        # Trading Suggestions
+        # trading suggestions
         report_lines.append("**4. Strategic Implications**")
         report_lines.append("")
         report_lines.append("| **Time Frame** | **Strategy** | **Rationale** |")
         report_lines.append("|---|---|---|")
         
-        # Generate suggestions based on market moves
+        # generate suggestions based on market moves
         if strongest_movers:
             top_ticker, top_change = strongest_movers[0]
             
@@ -447,7 +443,7 @@ class MarketImpactReporter:
         
         report_lines.append("")
         
-        # Key Takeaway
+        # key takeaway
         report_lines.append("**5. Key Takeaway**")
         report_lines.append("")
         
@@ -464,24 +460,24 @@ class MarketImpactReporter:
         return "\n".join(report_lines)
 
     def run_full_analysis(self, event_date: str = None, event_description: str = None) -> str:
-        """Run complete analysis and generate report"""
+        """run complete analysis and generate report"""
         
         if not event_date:
             event_date = self.get_recent_trading_day()
         
-        print(f"🚀 Analyzing Market Impact for {self.config['name']}")
-        print(f"📅 Event Date: {event_date}")
-        print(f"🕐 Event Time: {self.config['release_time']}")
+        print(f"Analyzing Market Impact for {self.config['name']}")
+        print(f"Event Date: {event_date}")
+        print(f"Event Time: {self.config['release_time']}")
         print("=" * 60)
         
-        # Create event datetime
+        # create event datetime
         dt = datetime.strptime(event_date, "%Y-%m-%d")
         event_time = datetime.strptime(self.config['release_time'], "%H:%M").time()
         event_datetime = datetime.combine(dt.date(), event_time)
         
-        # Analyze each ticker
+        # analyze each ticker
         for ticker in self.config['tickers']:
-            print(f"📊 Analyzing {ticker}...")
+            print(f"Analyzing {ticker}...")
             
             market_data, data_interval = self.fetch_market_data(ticker, event_date)
             
@@ -492,11 +488,11 @@ class MarketImpactReporter:
                 
                 if result:
                     change_pct = result.get('price_change_pct', 0)
-                    print(f"   ✅ {ticker}: {change_pct:+.2f}%")
+                    print(f"    {ticker}: {change_pct:+.2f}%")
                 else:
-                    print(f"   ⚠️ {ticker}: Analysis incomplete")
+                    print(f"    {ticker}: Analysis incomplete")
             else:
-                print(f"   ❌ {ticker}: No data available")
+                print(f"    {ticker}: No data available")
                 self.results[ticker] = None
         
         print("\n" + "=" * 60)
