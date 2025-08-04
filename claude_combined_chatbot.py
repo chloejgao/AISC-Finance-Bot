@@ -73,7 +73,7 @@ if user_question:
 
             try:
                 answer = response.content[0].text
-                st.markdown("### 🧠 General Advice")
+                st.markdown("### General Advice")
                 st.markdown(answer)
             except Exception as e:
                 st.error(f"⚠️ Could not extract Claude's response: {e}")
