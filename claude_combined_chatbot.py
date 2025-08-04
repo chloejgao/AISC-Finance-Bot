@@ -3,8 +3,8 @@ import pandas as pd
 import anthropic
 import os
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # load reuters & stock data
 try:
