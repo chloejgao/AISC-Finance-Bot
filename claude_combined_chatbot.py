@@ -45,10 +45,10 @@ You are a financial assistant. Based on the market question, recent Reuters head
 🔍 Market Question:
 {question}
 
-📰 Top Reuters Headlines:
+Top Reuters Headlines:
 {recent_news}
 
-📊 Stock Summary (average prices and volumes):
+Stock Summary (average prices and volumes):
 {stock_summary}
 """
     return context
@@ -76,7 +76,7 @@ if user_question:
                 st.markdown("### General Advice")
                 st.markdown(answer)
             except Exception as e:
-                st.error(f"⚠️ Could not extract Claude's response: {e}")
+                st.error(f"Could not extract Claude's response: {e}")
 
         except Exception as e:
-            st.error(f"❌ API Error: {e}")
+            st.error(f"API Error: {e}")
